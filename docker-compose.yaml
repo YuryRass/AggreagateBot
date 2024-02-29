@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+
+  mongo-express:
+    image: mongo-express
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env-mongo
+    links:
+      - mongo-db
+    networks:
+      - mongo-network
+    restart: always
+    depends_on:
+      - mongo-db
+
+  mongo-db:
+    image: mongo:latest
+    container_name: mongo
+    env_file:
+      - .env-mongo
+    ports:
+      - "27000:27017"
+    volumes:
+      - mongodb_data_container:/data/db
+    networks:
+      - mongo-network
+
+
+networks:
+    mongo-network:
+      driver: bridge
+
+volumes:
+  mongodb_data_container:
+    driver: local

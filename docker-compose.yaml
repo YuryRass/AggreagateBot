@@ -1,6 +1,17 @@
 version: '3'
 
 services:
+  bot:
+    image: my_bot
+    build:
+      context: .
+    container_name: bot
+    env_file:
+      - .env
+    depends_on:
+      - mongo-db
+    networks:
+      - mongo-network
 
   mongo-express:
     image: mongo-express

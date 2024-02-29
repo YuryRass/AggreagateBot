@@ -1,18 +1,18 @@
-import logging
 import calendar
+import logging
 from datetime import datetime, timedelta
 from enum import Enum
 
-from pymongo import MongoClient
 from pymongo import MongoClient, errors
 from pymongo.collection import Collection
+
 from config import settings
 
 
 class TimePeriod(str, Enum):
-    HOUR = "hour"
-    DAY = "day"
-    MONTH = "month"
+    HOUR = 'hour'
+    DAY = 'day'
+    MONTH = 'month'
 
 
 class DataBase:
@@ -36,22 +36,22 @@ class DataBase:
         assert self.coll is not None
 
         group_types = {
-            TimePeriod.HOUR: "%Y-%m-%dT%H",
-            TimePeriod.DAY: "%Y-%m-%d",
-            TimePeriod.MONTH: "%Y-%m",
+            TimePeriod.HOUR: '%Y-%m-%dT%H',
+            TimePeriod.DAY: '%Y-%m-%d',
+            TimePeriod.MONTH: '%Y-%m',
         }
 
         dt_format = group_types[group_type]
 
         query = [
-            {"$match": {"dt": {"$gte": dt_from, "$lte": dt_upto}}},
+            {'$match': {'dt': {'$gte': dt_from, '$lte': dt_upto}}},
             {
-                "$group": {
-                    "_id": {"$dateToString": {"format": dt_format, "date": "$dt"}},
-                    "period_sum": {"$sum": "$value"},
+                '$group': {
+                    '_id': {'$dateToString': {'format': dt_format, 'date': '$dt'}},
+                    'period_sum': {'$sum': '$value'},
                 }
             },
-            {"$sort": {"_id": 1}},
+            {'$sort': {'_id': 1}},
         ]
 
         cursor = self.coll.aggregate(query)
@@ -60,18 +60,18 @@ class DataBase:
         data = []
 
         iso_types = {
-            TimePeriod.HOUR: ":00:00",
-            TimePeriod.DAY: "T00:00:00",
-            TimePeriod.MONTH: "-01T00:00:00",
+            TimePeriod.HOUR: ':00:00',
+            TimePeriod.DAY: 'T00:00:00',
+            TimePeriod.MONTH: '-01T00:00:00',
         }
 
         iso_format = iso_types[group_type]
 
         for doc in cursor:
-            dt_raw = datetime.fromisoformat(doc["_id"] + iso_format)
+            dt_raw = datetime.fromisoformat(doc['_id'] + iso_format)
             dt_iso = datetime.isoformat(dt_raw)
             labels.append(dt_iso)
-            data.append(doc["period_sum"])
+            data.append(doc['period_sum'])
 
         result_data = []
         result_labels = []
@@ -100,7 +100,7 @@ class DataBase:
 
             current_date += delta
 
-        return {"dataset": result_data, "labels": result_labels}
+        return {'dataset': result_data, 'labels': result_labels}
 
     def __connect(self) -> None:
         try:
@@ -114,8 +114,8 @@ class DataBase:
                 mongo_client = mongo_client[self.db_name]
                 self.coll = mongo_client[self.coll_name]
         except errors.ServerSelectionTimeoutError:
-            logging.error("Failed to Connect DB")
+            logging.error('Failed to Connect DB')
         except errors.ConnectionFailure:
-            logging.error("Connection Failure")
+            logging.error('Connection Failure')
         except errors.ConfigurationError:
-            logging.error("Configurarion Error")
+            logging.error('Configurarion Error')
